@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "linux_build",
+			"command": "sh build.sh",
+		},
+		{
+			"type": "shell",
+			"label": "linux_run",
+			"command": "./game_server",
+		},
+	]
+}

@@ -1,0 +1,1 @@
+gcc game_server.c -o game_server
