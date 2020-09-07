@@ -1,1 +1,1 @@
-gcc game_server.c -o game_server
+g++ game_server.cpp -o game_server

@@ -21,3 +21,27 @@ u64 reverseByteOrder64(u64 v){
            ((v >> 24) & 0xff0000) | ((v << 24) & 0xff000000) |
            ((v >> 8) & 0xff000000) | ((v << 8) & 0xff0000);
 }
+
+s64 readBitsFromArray(s8* array, u64 b2r, u32* offset){
+    u32 byteCt = *offset / 8;
+    u32 bitCt = *offset % 8;
+
+    u8 currentByte = array[byteCt];
+    s64 result = 0;
+
+    for(int i = 0; i < b2r; i++){
+        result |= ((currentByte << bitCt) & 0b10000000) >> 7;
+        bitCt++;
+        if(bitCt == 8){
+            bitCt = 0;
+            byteCt++;
+            currentByte = array[byteCt]; 
+        }
+        if(i < b2r - 1){
+            result <<= 1;
+        }
+    }
+
+    *offset += b2r;
+    return result;
+}
