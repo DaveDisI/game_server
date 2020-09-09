@@ -3,12 +3,12 @@
 	"tasks": [
 		{
 			"type": "shell",
-			"label": "linux_build",
+			"label": "lnx_build",
 			"command": "sh build.sh",
 		},
 		{
 			"type": "shell",
-			"label": "linux_run",
+			"label": "lnx_run",
 			"command": "./game_server",
 		},
 	]

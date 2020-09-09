@@ -1,1 +1,1 @@
-g++ game_server.cpp -o game_server
+g++ game_server_lnx.cpp -o game_server -lpthread

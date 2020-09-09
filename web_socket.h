@@ -27,6 +27,30 @@ void convertHexStringToByteArray(char* str, unsigned char* buffer){
     }
 }
 
+s64 readBitsFromArray(s8* array, u64 b2r, u32* offset){
+    u32 byteCt = *offset / 8;
+    u32 bitCt = *offset % 8;
+
+    u8 currentByte = array[byteCt];
+    s64 result = 0;
+
+    for(int i = 0; i < b2r; i++){
+        result |= ((currentByte << bitCt) & 0b10000000) >> 7;
+        bitCt++;
+        if(bitCt == 8){
+            bitCt = 0;
+            byteCt++;
+            currentByte = array[byteCt]; 
+        }
+        if(i < b2r - 1){
+            result <<= 1;
+        }
+    }
+
+    *offset += b2r;
+    return result;
+}
+
 void convertByteArrayToBase64String(unsigned char* byteArray, char* b64Str){
     int bctr = 0;
     for(int i = 0; i < 18; i += 3){
@@ -99,4 +123,46 @@ void getWebSocketKeyFromString(char* str, char* wskBuffer){
         c++;
     }
     wskBuffer[kbctr] = '\0';
+}
+
+void processFrame(s8* dat, u32 len){
+    u32 offset = 0;
+    s8 fin = readBitsFromArray(dat, 1, &offset);
+    s8 rsv[3] = {
+        (s8)readBitsFromArray(dat, 1, &offset), 
+        (s8)readBitsFromArray(dat, 1, &offset), 
+        (s8)readBitsFromArray(dat, 1, &offset)
+    };
+    s8 opcode = readBitsFromArray(dat, 4, &offset);
+    s8 mask = readBitsFromArray(dat, 1, &offset);
+    s64 payloadLen = readBitsFromArray(dat, 7, &offset);
+
+    if(payloadLen == 126){
+        payloadLen = readBitsFromArray(dat, 16, &offset);
+    }else if(payloadLen == 127){
+        payloadLen = readBitsFromArray(dat, 64, &offset);
+    }
+
+    printf("fin: %u\n", fin);
+    printf("rsv1: %u  rsv2: %u  rsv3: %u\n", rsv[0], rsv[1], rsv[2]);
+    printf("opcode: %u\n", opcode);
+    printf("mask: %i\n", mask);
+    printf("payloadLen: %lli\n", payloadLen);
+    printf("\n");
+
+    if(mask){
+        s8 maskKey[4] = {
+            (s8)readBitsFromArray(dat, 8, &offset),
+            (s8)readBitsFromArray(dat, 8, &offset),
+            (s8)readBitsFromArray(dat, 8, &offset),
+            (s8)readBitsFromArray(dat, 8, &offset),
+        };
+        for(s32 i = 0; i < payloadLen; i++){
+            s8 av = readBitsFromArray(dat, 8, &offset);
+            av ^= maskKey[i % 4];
+            printf("CHARACTER: %c\n", av);
+        }
+    }else{
+
+    }
 }
