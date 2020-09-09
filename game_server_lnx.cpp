@@ -15,6 +15,12 @@ struct ClientData{
     bool varified;
 };
 
+const char RESPONSE_TEXT[] = "\
+HTTP/1.1 101 Switching Protocols\r\n\
+Upgrade: websocket\r\n\
+Connection: Upgrade\r\n\
+Sec-WebSocket-Accept: \0";
+
 void* handleClient(void* data){
     ClientData* cdat = (ClientData*)data;
 
@@ -23,15 +29,8 @@ void* handleClient(void* data){
     s32 readAmt = read(cdat->socket, buffer, BUFFER_SIZE); 
 
     if(readAmt >= 0){
-
-        char resp[] = "\
-HTTP/1.1 101 Switching Protocols\r\n\
-Upgrade: websocket\r\n\
-Connection: Upgrade\r\n\
-Sec-WebSocket-Accept: \0";
-        
         int resplen = 0;
-        char* c = resp;
+        const char* c = RESPONSE_TEXT;
         char responseBuffer[BUFFER_SIZE];
         int rbctr = 0;
         while(*c != '\0'){
@@ -72,16 +71,37 @@ Sec-WebSocket-Accept: \0";
         keyExchanged = true;
     }
 
-    while(readAmt >= 0){
-        printf("%s\n", buffer); 
-        // s32 sendAmt = send(clientSocket, "YO!", 3 , 0);
-        // if(sendAmt < 0){ 
-        //     printf("Error sending data to client.");
-        //     return 1;
-        // }
+    readAmt = read(cdat->socket, buffer, BUFFER_SIZE);
+    while(readAmt > 0){
+        processFrame(buffer, readAmt);
+
+        char sendVal[256] = {};
+        sendVal[0] = 130;
+        sendVal[1] = 9;
+
+        char* svp = (char*)&sendVal[2];
+        u32 sctr = 0;
+        svp[sctr++] = 'C';
+        svp[sctr++] = 'A';
+        svp[sctr++] = 'C';
+        svp[sctr++] = 'A';
+        svp[sctr++] = ' ';
+        svp[sctr++] = 'F';
+        svp[sctr++] = 'A';
+        svp[sctr++] = 'C';
+        svp[sctr++] = 'E';
+
+
+        s32 sendAmt = send(cdat->socket, sendVal, 11, 0);
+        if(sendAmt < 0){ 
+            printf("Error sending data to client.");
+            return 0;
+        }
+
         readAmt = read(cdat->socket, buffer, BUFFER_SIZE); 
     }
 
+    pthread_exit(0);
     return 0;
 }
 
@@ -118,11 +138,12 @@ s32 main(s32 argc, char** argv){
         return 1; 
     } 
 
+    printf("server started\n");
+
     ClientData clients[5] = {};
-    u32 totalClients = 0;
     socklen_t addressLength = 0;
-    bool running = true;
-    while(running){
+    u32 totalClients = 0;
+    while(true) {
         err = clients[totalClients].socket = accept(serverSocket, (sockaddr*)&address, &addressLength);
         if (err < 0) { 
             printf("Error accepting client socket.\naddress length: %i\nerrno: %i\n", addressLength, errno); 

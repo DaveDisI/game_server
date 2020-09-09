@@ -160,8 +160,9 @@ void processFrame(s8* dat, u32 len){
         for(s32 i = 0; i < payloadLen; i++){
             s8 av = readBitsFromArray(dat, 8, &offset);
             av ^= maskKey[i % 4];
-            printf("CHARACTER: %c\n", av);
+            printf("%c", av);
         }
+        printf("\n");
     }else{
 
     }

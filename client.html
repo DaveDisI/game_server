@@ -1,11 +1,12 @@
 <html>
     <!DOCTYPE html>
     <meta charset="UTF-8">
+    <button onclick='sendData()'>SEND IT!!</button>
     <script>
-        
+        var socket;
         
         window.onload = function(){
-            var socket = new WebSocket("ws://localhost:8080");
+            socket = new WebSocket("ws://localhost:8080");
             socket.onopen = function(evt) { 
                 console.log("Connection Open");
             };
@@ -13,6 +14,7 @@
                 console.log("Connection Closed");
             };
             socket.onmessage = function(evt) { 
+                console.log("MESSAGE");
                 console.log(evt.data);
             };
             socket.onerror = function(evt) { 
@@ -20,6 +22,9 @@
             };
         }
         
-        
+        function sendData(){
+            socket.send("Data!!");
+        }
+
         </script>
 </html>
